@@ -1,61 +1,124 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## 🇭🇹 **README pour le module Immigration**
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# 🛂 eTicket - Module Immigration
 
-## About Laravel
+Ce dépôt contient le **backend Laravel** du module **Immigration** du projet **eTicket-Haïti**.  
+Il gère les formulaires d’entrée et de sortie, les ports d’arrivée, les décisions d’immigration et la gestion des tickets électroniques.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🏗️ Structure du module
+```markdown
+immigration/
+│
+├── app/ # Code source Laravel
+├── bootstrap/
+├── config/
+├── database/
+│ ├── factories/
+│ ├── migrations/
+│ ├── seeders/
+│
+├── routes/
+│ └── api.php # Routes API pour l’immigration
+│
+├── tests/
+│
+├── Dockerfile # Image Docker du backend Immigration
+├── .env # Variables d’environnement spécifiques
+└── README.md
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ⚙️ Environnement Docker
 
-## Learning Laravel
+Le module **Immigration** fonctionne comme un service Docker indépendant (`immigration-app`) géré par le `docker-compose.yml` global du projet.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 🧩 Démarrage (depuis la racine du projet eTicket-Haïti)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```bash
+docker-compose up -d --build immigration-app
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+📜 Arrêt du service Immigration
+```bash
+docker-compose stop immigration-app
+```
 
-## Laravel Sponsors
+⚙️ Exemple .env pour Immigration
+Crée un fichier .env dans le dossier immigration/ :
+```bash
+APP_NAME=eTicket-Immigration
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost:8081
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
 
-### Premium Partners
+DB_CONNECTION=mysql
+DB_HOST=immigration-db
+DB_PORT=3306
+DB_DATABASE=immigration_db
+DB_USERNAME=immigration_user
+DB_PASSWORD=secret
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+QUEUE_CONNECTION=sync
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+```
 
-## Contributing
+# URL du frontend
+```bash
+FRONTEND_URL=http://localhost:5173
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+🧰 Commandes utiles
+```bash
+# Installer Laravel (si le dossier est vide)
+docker run --rm -v ${PWD}:/app -w /app composer:2 create-project laravel/laravel . "12.*"
 
-## Code of Conduct
+# Installer les dépendances
+docker exec -it immigration-app composer install
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Générer la clé d’application
+docker exec -it immigration-app php artisan key:generate
 
-## Security Vulnerabilities
+# Exécuter les migrations
+docker exec -it immigration-app php artisan migrate --seed
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Lancer les tests
+docker exec -it immigration-app php artisan test
+```
 
-## License
+🔗 Communication avec le Frontend
+Le frontend commun (Vue 3) communique avec l’API Immigration via :
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+http://localhost:8081/api
+```
+
+Définis cette variable dans le .env du frontend :
+
+```env
+VITE_API_IMMIGRATION=http://localhost:8081/api
+```
+
+📦 Endpoints principaux
+```
+Endpoint	            Méthode	       Description
+/api/tickets	        GET	        Liste des tickets Immigration
+/api/passenger-forms	POST	    Soumission d’un formulaire passager
+/api/decisions	        POST	    Décision d’un officier d’immigration
+/api/ports	            GET	        Liste des ports d’entrée/sortie
+```
+👤 Auteur
+```
+Ben-Nael Jean Baptiste
+GitHub — LinkedIn
+```
+🧾 Licence
+```
+Distribué sous licence MIT.
+```
