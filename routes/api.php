@@ -3,30 +3,27 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Ping pour tester la disponibilité du service
-Route::get('/ping', function () {
-    return response()->json([
-        'service' => 'immigration',
-        'status' => 'ok',
-    ]);
-});
+use App\Http\Controllers\TicketController;
 
-// Exemple d'autres routes API Customs
 Route::middleware('api')->group(function () {
-    Route::get('/tickets', function () {
+
+    Route::post('/tickets', [TicketController::class, 'store'])
+    ->name('tickets.store');
+
+    Route::get('/tickets/show', [TicketController::class, 'showTicket'])
+    ->name('tickets-show');
+
+    Route::get('/tickets/{ticket_no}/download', [TicketController::class, 'download']);
+
+    Route::get('/tickets/{ticket_no}/download-pdf', [TicketController::class, 'downloadPdf']);
+
+    Route::post('/tickets/{ticket}/send-email', [TicketController::class, 'sendEmail']);
+
+    Route::get('/ping', function () {
         return response()->json([
-            'tickets' => [
-                ['id' => 101, 'ref' => 'CUST-001'],
-                ['id' => 102, 'ref' => 'CUST-002'],
-            ]
+            'status' => 'success',
+            'message' => 'Immigration API is working',
+            'timestamp' => now()->toDateTimeString()
         ]);
     });
-    
-    Route::get('/ping', function () {
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Immigration API is working',
-        'timestamp' => now()->toDateTimeString()
-    ]);
-});
 });
