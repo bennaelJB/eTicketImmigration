@@ -11,49 +11,76 @@ class Ticket extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'ticket_no', 'passenger_type', 'email', 'email_verified_at', 'status'
+        'ticket_no',
+        'status',
+        'passenger_type',
+        'email',
+        'parent_no',
+        'children_no',
     ];
 
+    protected $attributes = [
+        'status' => 'pending',
+    ];
+
+    protected $casts = [
+        'children_no' => 'array',
+    ];
+
+    protected $dates = ['deleted_at'];
+
     /**
-     * The "booting" method of the model.
-     *
-     * Cette méthode est appelée au démarrage du modèle et nous permet
-     * d'intercepter des événements. Ici, nous générons un ticket_no
-     * avant qu'un nouveau ticket ne soit créé.
+     * Relation : Un ticket a un formulaire passager
      */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($ticket) {
-            // Trouve le dernier ticket_no existant en base de données, trié par ordre décroissant
-            $lastTicket = self::orderBy('ticket_no', 'desc')->first();
-
-            if ($lastTicket) {
-                // Extrait la partie numérique, la convertit en décimal, l'incrémente et la reconvertit en hexadécimal
-                $lastNumber = substr($lastTicket->ticket_no, 1); // Enlève le préfixe 'J'
-                $decimal = hexdec($lastNumber);
-                $newDecimal = $decimal + 1;
-                $newHex = dechex($newDecimal);
-                $ticket_no = 'J' . str_pad(strtoupper($newHex), 8, '0', STR_PAD_LEFT);
-            } else {
-                // S'il n'y a pas de ticket existant, commence la numérotation à 1
-                $ticket_no = 'J00000001';
-            }
-
-            $ticket->ticket_no = $ticket_no;
-        });
-    }
-
-    protected $dates = ['email_verified_at', 'deleted_at'];
-
     public function passengerForm()
     {
         return $this->hasOne(PassengerForm::class);
     }
 
-    // public function decisions()
-    // {
-    //     return $this->hasMany(Decision::class);
-    // }
+    /**
+     * Relation : Un ticket a plusieurs décisions
+     */
+    public function decisions()
+    {
+        return $this->hasMany(Decision::class);
+    }
+
+    /**
+     * Scope : Filtrer les tickets par préfixe
+     */
+    public function scopeByPrefix($query, $prefix)
+    {
+        return $query->where('ticket_no', 'LIKE', $prefix . '%');
+    }
+
+    /**
+     * Scope : Filtrer les tickets mixtes (préfixe 'G')
+     */
+    public function scopeMixte($query)
+    {
+        return $query->where('ticket_no', 'LIKE', 'G%');
+    }
+
+    /**
+     * Accessor : Vérifier si le ticket est mixte
+     */
+    public function getIsMixteAttribute()
+    {
+        return substr($this->ticket_no, 0, 1) === 'G';
+    }
+
+    /**
+     * Accessor : Obtenir le type de service basé sur le préfixe
+     */
+    public function getServiceTypeAttribute()
+    {
+        $prefix = substr($this->ticket_no, 0, 1);
+
+        return match($prefix) {
+            'G' => 'mixte',
+            'J' => 'immigration',
+            'C' => 'customs',
+            default => 'unknown',
+        };
+    }
 }
